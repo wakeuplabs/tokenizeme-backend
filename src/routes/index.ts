@@ -16,7 +16,7 @@ var jwtCheck = expressJwt({
     algorithms: ['RS256']
   });
 
-router.get("/customer",/* [jwtCheck],  */managementController.getCustomer);
-router.post("/customer",/* [jwtCheck],  */managementController.createCustomer);
+router.get("/customer", [jwtCheck],  managementController.getCustomer);
+router.post("/customer", [jwtCheck],  managementController.createCustomer);
 
 export = router;

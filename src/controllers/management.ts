@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 const customerSchema = object().shape({
   name: string().required(),
   email: string().required(),
+  wallet: string().required(),
 });
 
 const getCustomer = async (req: Request, res: Response, next: NextFunction) => {
@@ -35,17 +36,20 @@ const createCustomer = async (
   next: NextFunction
 ) => {
   try {
-    const { name, email } = await customerSchema.validate(req.body, {
+    const { name, email, wallet } = await customerSchema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
     });
 
     const repository = await getCustomerRepository(mongodbClient);
-
-    const apiKey = uuidv4();
-    const newCustomer = new Customer(name, email, apiKey);
-    await repository.insert(newCustomer);
-
+    const registeredCustomer = await repository.findOne({ email });
+    const newCustomer = new Customer(name, email, wallet);
+    if(!registeredCustomer){
+      await repository.insert(newCustomer);  
+    }else{
+      registeredCustomer.wallet = wallet;
+      await repository.save(registeredCustomer);
+    }
     return res.status(200).json(newCustomer);
   } catch (error) {
     return next(error);
