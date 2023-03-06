@@ -8,7 +8,7 @@ class Customer {
 
   @index(1, { unique: true }) email: string;
 
-  @index(1, { unique: true }) wallet: string;
+  wallet: string;
 
   constructor(name: string, email: string, wallet: string) {
     this.name = name;
