@@ -24,14 +24,15 @@ class FileEntity {
 
   name: string;
   createdAt: Date;
-  size: number;
-
+  price: number;
   uploadedFileUrl!: string;
+  mintNft: boolean;
 
-  constructor(email: string, name: string, size: number) {
+  constructor(email: string, name: string, price: number, mintNft: boolean) {
     this.email = email;
     this.name = name;
-    this.size = size;
+    this.price = price;
+    this.mintNft = mintNft;
     this.createdAt = new Date();
   }
 }
@@ -66,7 +67,6 @@ const bootstrapDatabase = async (mongodbClient: MongoClient) => {
   let firstWallet = await customerRepository.findOne();
   console.log("Demo Wallet:", firstWallet?.wallet);
 };
-
 
 export {
   Customer,

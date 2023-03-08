@@ -1,35 +1,46 @@
 import { Request, NextFunction } from "express";
-
-import fs from "fs";
 import mongodbClient from "../lib/db/client";
 import { FileEntity, getFileEntitiesRepository } from "../lib/db/entities";
-
+import { Request as JWTRequest } from "express-jwt";
 import { ResponseWithLocals } from "../../modules";
 import { PinataHelper } from "../lib/pinataHelper";
+import { boolean, number, object, string } from "yup";
+import { Readable } from "stream";
 
 const pinata = new PinataHelper();
 
+const productSchema = object().shape({
+  productName: string().required(),
+  productPrice: number().required(),
+  mintNft: boolean().required(),
+});
+
 const uploadFile = async (
-  req: Request,
+  req: JWTRequest,
   res: ResponseWithLocals,
   next: NextFunction
 ) => {
   try {
-    /* const email = req.user && req.user.email;
-    console.log({email})
-    if (!email) {
-      throw new Error("Missing file to upload.");
-    } */
+    const email = req.auth?.['https://email'];
 
-    if (!req.files || !req.files.file || Array.isArray(req.files.file)) {
+    if(!email){
+      throw new Error("Missing email in jwt.");
+    }
+    
+    const { productName, productPrice,mintNft } = await productSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    if (!req.body.file) {
       throw new Error("Missing file to upload.");
     }
 
-    const file = req.files.file;
-
-    const readableStreamForFile = fs.createReadStream(file.tempFilePath);
-
-    const uploadResult = await pinata.pinFileToIPFS(readableStreamForFile, {
+    const file = req.body.file;
+    const stream = new Readable();
+    stream.push(Buffer.from(file, 'base64'));
+    stream.push(null);
+    const uploadResult = await pinata.pinFileToIPFS(stream, {
       pinataMetadata: {
         name: `WakeUp (Image)`,
       },
@@ -42,7 +53,7 @@ const uploadFile = async (
 
     const repository = await getFileEntitiesRepository(mongodbClient);
 
-    const fileEntity = new FileEntity('hola', file.name, file.size);
+    const fileEntity = new FileEntity(email, productName, productPrice, mintNft);
 
     fileEntity.uploadedFileUrl = uploadedImageUrl;
 
