@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-
+import { Request as JWTRequest } from "express-jwt";
 import mongodbClient from "../lib/db/client";
 import { Customer, getCustomerRepository } from "../lib/db/entities";
-
 import { object, string } from "yup";
-import { v4 as uuidv4 } from "uuid";
+import { WU_JwtPayload } from "../lib/types";
 
 const customerSchema = object().shape({
   name: string().required(),
@@ -12,18 +11,16 @@ const customerSchema = object().shape({
   wallet: string().required(),
 });
 
-const getCustomer = async (req: Request, res: Response, next: NextFunction) => {
+const getCustomer = async (req: JWTRequest<WU_JwtPayload>, res: Response, next: NextFunction) => {
   try {
-    const { email } = req.query;
+    const email = req.auth?.['https://email'];
 
-    if (!email) {
-      throw new Error(`Missing email filter`);
+    if(!email){
+      throw new Error("Missing email in jwt.");
     }
 
     const repository = await getCustomerRepository(mongodbClient);
-
     const registeredApiKey = await repository.findOne({ email });
-
     return res.status(200).json(registeredApiKey);
   } catch (error) {
     return next(error);
@@ -31,12 +28,17 @@ const getCustomer = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const createCustomer = async (
-  req: Request,
+  req: JWTRequest<WU_JwtPayload>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { name, email, wallet } = await customerSchema.validate(req.body, {
+    const email = req.auth?.['https://email'];
+
+    if(!email){
+      throw new Error("Missing email in jwt.");
+    }
+    const { name, wallet } = await customerSchema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
     });

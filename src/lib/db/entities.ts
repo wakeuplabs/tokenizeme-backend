@@ -17,6 +17,24 @@ class Customer {
   }
 }
 
+class FileEntity {
+  @id id!: ObjectId;
+
+  @index() email: string;
+
+  name: string;
+  createdAt: Date;
+  size: number;
+
+  uploadedFileUrl!: string;
+
+  constructor(email: string, name: string, size: number) {
+    this.email = email;
+    this.name = name;
+    this.size = size;
+    this.createdAt = new Date();
+  }
+}
 
 const getCustomerRepository = async (mongodbClient: MongoClient) => {
   const repository = new Repository<Customer>(
@@ -30,6 +48,17 @@ const getCustomerRepository = async (mongodbClient: MongoClient) => {
   return repository;
 };
 
+const getFileEntitiesRepository = async (mongodbClient: MongoClient) => {
+  const repository = new Repository<FileEntity>(
+    FileEntity,
+    mongodbClient,
+    "file-entities"
+  );
+
+  await repository.createIndexes();
+
+  return repository;
+};
 
 const bootstrapDatabase = async (mongodbClient: MongoClient) => {
   const customerRepository = await getCustomerRepository(mongodbClient);
@@ -38,8 +67,11 @@ const bootstrapDatabase = async (mongodbClient: MongoClient) => {
   console.log("Demo Wallet:", firstWallet?.wallet);
 };
 
+
 export {
   Customer,
+  FileEntity,
   getCustomerRepository,
   bootstrapDatabase,
+  getFileEntitiesRepository
 };
