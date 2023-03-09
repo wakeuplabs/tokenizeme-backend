@@ -37,6 +37,11 @@ const uploadFile = async (
     }
 
     const file = req.body.file;
+    const type = file.charAt(0);
+    if (!(type === '/' || type === 'i' || type === 'R')) { //Checks if its an image
+      throw new Error("Wrong file type, only images are allowed");
+    }
+
     const stream = new Readable();
     stream.push(Buffer.from(file, 'base64'));
     stream.push(null);
