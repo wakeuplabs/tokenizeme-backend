@@ -74,12 +74,16 @@ const uploadFile = async (
 };
 
 const listUploadedFiles = async (
-  req: Request,
+  req: JWTRequest,
   res: ResponseWithLocals,
   next: NextFunction
 ) => {
   try {
-    const email = res.locals.customer!.id.toString();
+    const email = req.auth?.['https://email'];
+
+    if(!email){
+      throw new Error("Missing email in jwt.");
+    }
 
     const repository = await getFileEntitiesRepository(mongodbClient);
 
