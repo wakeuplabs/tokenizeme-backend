@@ -17,7 +17,8 @@ router.use(morgan("dev"));
 /** Parse the request */
 router.use(express.urlencoded({ extended: false }));
 /** Takes care of JSON data */
-router.use(express.json());
+router.use(express.json({limit: '1mb'}));
+
 /** Takes care of file upload */
 router.use(fileUpload({ useTempFiles: true }));
 
