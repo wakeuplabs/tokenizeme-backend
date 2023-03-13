@@ -4,8 +4,10 @@ import { FileEntity, getFileEntitiesRepository } from "../lib/db/entities";
 import { Request as JWTRequest } from "express-jwt";
 import { ResponseWithLocals } from "../../modules";
 import { PinataHelper } from "../lib/pinataHelper";
-import { boolean, number, object, string } from "yup";
+import { boolean, mixed, number, object, string } from "yup";
 import { Readable } from "stream";
+import { ProductStatus } from "../lib/types";
+import { ObjectID } from "bson";
 
 const pinata = new PinataHelper();
 
@@ -88,8 +90,44 @@ const listUploadedFiles = async (
     const repository = await getFileEntitiesRepository(mongodbClient);
 
     const result = await repository.find({ email }).toArray();
-
+    
     return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const setStatusProduct = object().shape({
+  id: string().required(),
+  state: mixed<ProductStatus>().required().oneOf([ProductStatus.cancelled, ProductStatus.onSale, ProductStatus.sold])
+});
+
+const setStateProduct = async (
+  req: JWTRequest,
+  res: ResponseWithLocals,
+  next: NextFunction
+) => {
+  try {
+    const email = req.auth?.['https://email'];
+    const { id, state } = await setStatusProduct.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    if(!email){
+      throw new Error("Missing email in jwt.");
+    }
+
+    const repository = await getFileEntitiesRepository(mongodbClient);
+
+    const product = await repository.findOne({ _id: new ObjectID(id)});
+    if(!product){
+      throw new Error("Product not found.");
+    }
+    
+    product.status = state;
+    repository.save(product);
+    return res.status(200).json(product);
   } catch (error) {
     return next(error);
   }
@@ -98,4 +136,5 @@ const listUploadedFiles = async (
 export default {
   uploadFile,
   listUploadedFiles,
+  setStateProduct
 };

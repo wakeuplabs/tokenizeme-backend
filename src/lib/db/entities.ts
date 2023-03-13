@@ -1,5 +1,6 @@
 import { MongoClient, ObjectId } from "mongodb";
-import { id, index, Repository } from "mongodb-typescript";
+import { id, index, Repository } from "mongodb-typescript"; 
+import { ProductStatus } from "../types";
 
 class Customer {
   @id id!: ObjectId;
@@ -27,6 +28,7 @@ class FileEntity {
   price: number;
   uploadedFileUrl!: string;
   mintNft: boolean;
+  status: ProductStatus;
 
   constructor(email: string, name: string, price: number, mintNft: boolean) {
     this.email = email;
@@ -34,6 +36,7 @@ class FileEntity {
     this.price = price;
     this.mintNft = mintNft;
     this.createdAt = new Date();
+    this.status = ProductStatus.listed;
   }
 }
 

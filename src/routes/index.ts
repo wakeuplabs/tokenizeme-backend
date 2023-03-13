@@ -19,6 +19,7 @@ var jwtCheck = expressJwt({
 router.get("/customer", [jwtCheck],  managementController.getCustomer);
 router.post("/customer", [jwtCheck],  managementController.createCustomer);
 router.post("/uploadProduct", [jwtCheck],  upload.uploadFile);
+router.put("/uploadProduct", [jwtCheck],  upload.setStateProduct);
 router.get("/listProducts", [jwtCheck],  upload.listUploadedFiles);
 
 export = router;
